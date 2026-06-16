@@ -16,7 +16,7 @@ export function TagInput({ tags, onChange }: TagInputProps) {
 
     return (
         <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-xs font-medium text-(--text-muted)">
                 Tags
             </span>
             <ul className="list-none m-0 p-0 flex flex-wrap gap-1.5">
@@ -32,11 +32,8 @@ export function TagInput({ tags, onChange }: TagInputProps) {
                                     'text-[12px] px-2.5 py-0.5 rounded-full border cursor-pointer transition-all',
                                     active
                                         ? 'bg-indigo-600 text-white border-indigo-600'
-                                        : 'bg-transparent border-(--border) opacity-60 hover:opacity-100 hover:bg-(--surface-2)'
+                                        : 'bg-transparent border-(--border) text-(--text-muted) opacity-60 hover:opacity-100 hover:bg-(--surface-2)'
                                 ].join(' ')}
-                                style={{
-                                    color: active ? '#fff' : 'var(--text-muted)'
-                                }}
                             >
                                 #{tag}
                             </button>

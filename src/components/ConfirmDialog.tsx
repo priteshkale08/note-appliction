@@ -43,8 +43,7 @@ export function ConfirmDialog({
             onClick={onCancel}
         >
             <div
-                className="rounded-xl p-6 w-[min(90vw,400px)] flex flex-col gap-4 shadow-xl"
-                style={{ background: 'var(--surface)' }}
+                className="rounded-xl p-6 w-[min(90vw,400px)] flex flex-col gap-4 shadow-xl bg-(--surface) text-(--text)"
                 role="alertdialog"
                 aria-modal="true"
                 aria-labelledby="confirm-title"
@@ -54,18 +53,13 @@ export function ConfirmDialog({
                 <h2 id="confirm-title" className="m-0 text-[17px] font-semibold">
                     {title}
                 </h2>
-                <p id="confirm-message" className="m-0 text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p id="confirm-message" className="m-0 text-sm text-(--text-muted)">
                     {message}
                 </p>
                 <div className="flex justify-end gap-2">
                     <button
                         type="button"
-                        className="px-4 py-2 text-sm rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
-                        style={{
-                            background: 'var(--surface-2)',
-                            borderColor: 'var(--border)',
-                            color: 'var(--text)'
-                        }}
+                        className="px-4 py-2 text-sm rounded-md border border-(--border) bg-(--surface-2) text-(--text) cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={onCancel}
                     >
                         {cancelLabel}

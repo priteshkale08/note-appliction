@@ -2,6 +2,7 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { selectNote, selectSelectedId } from "../features/notes/notesSlice";
 import type { Note } from "../types";
 import { formatRelative } from "../utils/date";
+import { Check } from "lucide-react";
 
 interface NoteListItemProps {
     note: Note;
@@ -28,10 +29,10 @@ export default function NoteListItem({ note }: NoteListItemProps) {
                 aria-pressed={isSelected}
                 onClick={() => dispatch(selectNote(note.id))}
                 className={[
-                    'w-full text-left rounded-xl border px-3.5 py-3 flex flex-col gap-1.5 cursor-pointer transition-all',
+                    'bg-(--surface) w-full text-left rounded-lg border border-(--border) px-3.5 py-3 flex flex-col gap-1.5 cursor-pointer transition-all bg-(--surface) text-(--text)',
                     isSelected
                         ? 'border-indigo-500 shadow-[0_0_0_1px_#6366f1]'
-                        : 'hover:border-indigo-400'
+                        : 'hover:border-indigo-400 hover:bg-(--surface-2)'
                 ].join(' ')}
             >
                 <div className="flex items-baseline justify-between gap-2">
@@ -42,17 +43,17 @@ export default function NoteListItem({ note }: NoteListItemProps) {
                         <span className="text-[11px] italic text-indigo-500 shrink-0">Saving…</span>
                     )}
                     {note.completed && (
-                        <span className="text-[11px] text-green-600 shrink-0">✓</span>
+                        <span className="text-[11px] text-green-600 shrink-0"><Check size={18} /></span>
                     )}
                 </div>
                 <p
-                    className="text-[13px] m-0 line-clamp-2 text-muted"
+                    className="text-[13px] m-0 line-clamp-2 text-(--text-muted)"
                 >
                     {preview(note.content) || 'No content yet'}
                 </p>
 
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-[12px] whitespace-nowrap text-muted">
+                    <span className="text-[12px] whitespace-nowrap text-(--text-muted)">
                         {formatRelative(note.updatedAt)}
                     </span>
                     {note.tags.length > 0 && (
@@ -60,12 +61,7 @@ export default function NoteListItem({ note }: NoteListItemProps) {
                             {note.tags.slice(0, 3).map((t) => (
                                 <span
                                     key={t}
-                                    className="text-[11px] px-2 py-0.5 rounded-full border"
-                                    style={{
-                                        background: 'var(--surface-2)',
-                                        borderColor: 'var(--border)',
-                                        color: 'var(--text-muted)'
-                                    }}
+                                    className="text-[11px] px-2 py-0.5 rounded-full border border-(--border) bg-(--surface-2) text-(--text-muted)"
                                 >
                                     #{t}
                                 </span>

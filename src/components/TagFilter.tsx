@@ -9,8 +9,7 @@ export function TagFilter() {
     return (
         <nav className="flex flex-col gap-0.5" aria-label="Filter by tag">
             <h2
-                className="text-[11px] font-semibold uppercase tracking-widest px-2 mb-2"
-                style={{ color: 'var(--text-muted)' }}
+                className="text-[11px] font-semibold uppercase tracking-widest px-2 mb-2 text-(--text-muted)"
             >
                 Tags
             </h2>
@@ -24,9 +23,8 @@ export function TagFilter() {
                             'w-full text-left px-2.5 py-1.5 rounded-md text-sm border-none cursor-pointer transition-colors',
                             activeTag === null
                                 ? 'bg-indigo-600 text-white'
-                        : 'bg-transparent hover:bg-(--surface-2)'
-                    ].join(' ')}
-                        style={{ color: activeTag === null ? '#fff' : 'var(--text)' }}
+                                : 'bg-transparent text-(--text) hover:bg-(--surface-2)'
+                        ].join(' ')}
                     >
                         All notes
                     </button>
@@ -43,9 +41,8 @@ export function TagFilter() {
                                     'w-full text-left px-2.5 py-1.5 rounded-md text-sm border-none cursor-pointer transition-colors',
                                     active
                                         ? 'bg-indigo-600 text-white'
-                                        : 'bg-transparent hover:bg-(--surface-2)'
+                                        : 'bg-transparent text-(--text) hover:bg-(--surface-2)'
                                 ].join(' ')}
-                                style={{ color: active ? '#fff' : 'var(--text)' }}
                             >
                                 #{tag}
                             </button>

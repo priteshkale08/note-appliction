@@ -5,6 +5,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { renderMarkdown } from '../utils/markdown';
 import { ConfirmDialog } from './ConfirmDialog';
 import { TagInput } from './TagInput';
+import { ArrowLeft } from 'lucide-react';
 
 interface EditorForm {
     title: string;
@@ -27,7 +28,7 @@ export function NoteEditor({ onBack }: NoteEditorProps) {
     const saving = useAppSelector(selectSaving);
 
     const [form, setForm] = useState<EditorForm>({ title: '', content: '', completed: false, tags: [] });
-    const [showPreview, setShowPreview] = useState(false);
+    const [showPreview, setShowPreview] = useState(true);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const lastSavedRef = useRef<string>('');
     const isPending = note?.id.startsWith('temp-') ?? false;
@@ -56,11 +57,10 @@ export function NoteEditor({ onBack }: NoteEditorProps) {
         return (
             <section
                 className="flex flex-col items-center justify-center flex-1 gap-2 p-8 text-center"
-                style={{ color: 'var(--text-muted)' }}
                 aria-label="Note editor"
             >
-                <p className="text-base font-semibold m-0">Select a note</p>
-                <p className="text-sm m-0" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-base font-semibold m-0 text-(--text)">Select a note</p>
+                <p className="text-sm m-0 text-(--text-muted)">
                     Choose a note from the list, or create a new one.
                 </p>
             </section>
@@ -73,38 +73,24 @@ export function NoteEditor({ onBack }: NoteEditorProps) {
 
     return (
         <section className="flex flex-col flex-1 min-h-0" aria-label="Note editor">
-            <header
-                className="shrink-0 flex flex-col gap-2 px-4 py-3 border-b"
-                style={{ borderColor: 'var(--border)' }}
-            >
-                <div className="flex items-center gap-2 min-w-0">
+            <header className="shrink-0 flex justify-between gap-2 px-4 py-3 border-b border-(--border)">
+                <div className="flex items-center gap-2">
                     {onBack && (
                         <button
                             type="button"
                             onClick={onBack}
                             className="md:hidden shrink-0 text-indigo-600 font-medium text-sm bg-transparent border-none cursor-pointer p-0"
                         >
-                            ←
+                            <ArrowLeft />
                         </button>
                     )}
-                    <input
-                        className="flex-1 min-w-0 text-xl font-bold border-none bg-transparent outline-none"
-                        style={{ color: 'var(--text)' }}
-                        value={form.title}
-                        placeholder="Untitled note"
-                        aria-label="Note title"
-                        onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    />
-                </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs shrink-0" style={{ color: 'var(--text-muted)' }}>
+                    <span className="text-xs shrink-0 text-(--text-muted)">
                         {saveLabel}
                     </span>
 
                     <label
                         className="flex items-center gap-1.5 text-sm cursor-pointer select-none shrink-0"
-                        style={{ color: 'var(--text-muted)' }}
                     >
                         <input
                             type="checkbox"
@@ -112,18 +98,15 @@ export function NoteEditor({ onBack }: NoteEditorProps) {
                             onChange={(e) => setForm((f) => ({ ...f, completed: e.target.checked }))}
                             className="accent-indigo-600 w-4 h-4"
                         />
-                        Done
+                        Mark as completed
                     </label>
+                </div>
 
+                <div className="flex items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-2 ml-auto">
                         <button
                             type="button"
-                            className="px-3 py-1.5 text-sm rounded-md border cursor-pointer"
-                            style={{
-                                background: 'var(--surface-2)',
-                                borderColor: 'var(--border)',
-                                color: 'var(--text)'
-                            }}
+                            className="px-3 py-1.5 text-sm rounded-md border border-(--border) text-(--text) bg-transparent hover:bg-(--surface-2) cursor-pointer transition-colors"
                             aria-pressed={showPreview}
                             onClick={() => setShowPreview((p) => !p)}
                         >
@@ -141,20 +124,24 @@ export function NoteEditor({ onBack }: NoteEditorProps) {
             </header>
 
             <div className="flex-1 flex flex-col min-h-0 px-4 py-3 gap-3">
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                    <input
+                        className="w-full text-lg font-medium rounded-md p-2 text-(--text) border border-(--border) outline-none focus:border-indigo-500"
+                        value={form.title}
+                        placeholder="Untitled note"
+                        aria-label="Note title"
+                        onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                    />
+                </div>
+
                 {showPreview ? (
                     <div
-                        className="flex-1 overflow-y-auto rounded-md border p-4 text-sm leading-relaxed markdown-body"
-                        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+                        className="flex-1 overflow-y-auto rounded-md p-4 text-sm leading-relaxed markdown-body bg-(--surface-2) text-(--text)"
                         dangerouslySetInnerHTML={{ __html: previewHtml }}
                     />
                 ) : (
                     <textarea
-                        className="editor-textarea flex-1 min-h-[200px] rounded-md border p-3 text-sm leading-relaxed"
-                        style={{
-                            background: 'var(--surface-2)',
-                            borderColor: 'var(--border)',
-                            color: 'var(--text)'
-                        }}
+                        className="editor-textarea flex-1 min-h-[200px] rounded-md p-3 text-sm leading-relaxed bg-(--surface-2) text-(--text) border border-(--border) outline-none focus:border-indigo-500 resize-none"
                         value={form.content}
                         placeholder="Start writing… Markdown is supported."
                         aria-label="Note content"

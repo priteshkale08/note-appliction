@@ -8,7 +8,7 @@ export interface Note {
     updatedAt: string;
 }
 
-export type SortKey = 'createdAt' | 'updatedAt' | 'title';
+export type SortKey = 'createdAt' | 'updatedAt' | 'title' | 'completed';
 
 export interface NotesQuery {
     search?: string;

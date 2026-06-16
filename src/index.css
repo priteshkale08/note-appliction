@@ -1,7 +1,27 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --surface-2: #f3f4f6;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-muted: #6b7280;
+}
+
+.dark {
+    --bg: #0f0f12;
+    --surface: #1a1a20;
+    --surface-2: #24242c;
+    --border: #2e2e38;
+    --text: #ececf1;
+    --text-muted: #9a9aa6;
+}
 
 body {
-    background-color: #f5f5f5;
+    background-color: var(--bg);
+    color: var(--text);
 }
 
 @keyframes spin {
@@ -11,8 +31,52 @@ body {
 .spinner {
     width: 24px;
     height: 24px;
-    border: 3px solid #e5e7eb;
+    border: 3px solid var(--border);
     border-top-color: #4f46e5;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 { margin: 0.6em 0 0.3em; font-weight: 700; }
+
+.markdown-body pre {
+    background: var(--surface-2);
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 13px;
+}
+
+.markdown-body code {
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+
+.markdown-body pre code { background: transparent; padding: 0; }
+.markdown-body a { color: #4f46e5; text-decoration: underline; }
+.markdown-body p { margin: 0.4em 0; }
+.markdown-body ul, .markdown-body ol { padding-left: 1.4em; margin: 0.4em 0; }
+
+.editor-textarea {
+    font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+    resize: none;
+    outline: none;
+}
+
+.notes-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notes-list::-webkit-scrollbar-track {
+    background: var(--surface-2);
+}
+
+.notes-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 8px;
 }

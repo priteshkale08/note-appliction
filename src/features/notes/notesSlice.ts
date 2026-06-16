@@ -180,6 +180,31 @@ const notesSlice = createSlice({
     }
 });
 
+export const selectFilteredNotes = (state: RootState): Note[] => {
+    const { search, tag, sort } = state.filters;
+    let notes = state.notes.items;
+
+    if (search) {
+        const searchQuery = search.toLowerCase();
+        notes = notes.filter(
+            (item) => item.title.toLowerCase().includes(searchQuery) || item.content.toLowerCase().includes(searchQuery)
+        );
+    }
+
+    if (tag) {
+        notes = notes.filter((item) => item.tags.includes(tag));
+    }
+
+    return [...notes].sort((a, b) => {
+        if (sort === 'title') return a.title.localeCompare(b.title);
+        if (sort === 'createdAt') return b.createdAt.localeCompare(a.createdAt);
+        if (sort === 'updatedAt') return b.updatedAt.localeCompare(a.updatedAt);
+        if (sort === 'completed') {
+            return (b.completed ? 1 : 0) - (a.completed ? 1 : 0);
+        }
+    });
+};
+
 export const {
     selectNote,
     noteInserted,
@@ -190,8 +215,6 @@ export const {
     clearError
 } = notesSlice.actions;
 
-export default notesSlice.reducer;
-
 export const selectNotes = (state: RootState) => state.notes.items;
 export const selectNotesStatus = (state: RootState) => state.notes.status;
 export const selectNotesError = (state: RootState) => state.notes.error;
@@ -199,24 +222,4 @@ export const selectSelectedId = (state: RootState) => state.notes.selectedId;
 export const selectSaving = (state: RootState) => state.notes.saving;
 export const selectSelectedNote = (state: RootState) => state.notes.items.find((n) => n.id === state.notes.selectedId) ?? null;
 
-export const selectFilteredNotes = (state: RootState): Note[] => {
-    const { search, tag, sort } = state.filters;
-    let notes = state.notes.items;
-
-    if (search) {
-        const q = search.toLowerCase();
-        notes = notes.filter(
-            (n) => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)
-        );
-    }
-
-    if (tag) {
-        notes = notes.filter((n) => n.tags.includes(tag));
-    }
-
-    return [...notes].sort((a, b) => {
-        if (sort === 'title') return a.title.localeCompare(b.title);
-        if (sort === 'createdAt') return b.createdAt.localeCompare(a.createdAt);
-        return b.updatedAt.localeCompare(a.updatedAt);
-    });
-};
+export default notesSlice.reducer;

@@ -88,11 +88,9 @@ function mapTodo(todo: DummyTodo): Note {
     };
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
-
 export const notesApi = {
     list(query: NotesQuery = {}): Promise<PaginatedNotes> {
-        const limit = query.pageSize ?? 30;
+        const limit = query.pageSize ?? 10;
         const skip = ((query.page ?? 1) - 1) * limit;
         return request<DummyListResponse>(`/todos?limit=${limit}&skip=${skip}`).then((r) => ({
             items: r.todos.map(mapTodo),

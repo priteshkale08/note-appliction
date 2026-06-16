@@ -14,8 +14,7 @@ export default function NoteList({ onRetry }: NoteListProps) {
     if (status === 'loading' && notes.length === 0) {
         return (
             <div
-                className="flex flex-col flex-1 items-center justify-center gap-3 p-10 text-sm"
-                style={{ color: 'var(--text-muted)' }}
+                className="flex flex-col flex-1 items-center justify-center gap-3 p-10 text-sm text-(--text-muted)"
                 role="status"
                 aria-live="polite"
             >
@@ -28,19 +27,13 @@ export default function NoteList({ onRetry }: NoteListProps) {
     if (status === 'failed' && notes.length === 0) {
         return (
             <div
-                className="flex flex-col flex-1 items-center justify-center gap-3 p-10 text-sm text-center"
-                style={{ color: 'var(--text-muted)' }}
+                className="flex flex-col flex-1 items-center justify-center gap-3 p-10 text-sm text-center text-(--text-muted)"
                 role="alert"
             >
                 <p className="m-0">{error ?? 'Could not load notes.'}</p>
                 <button
                     type="button"
-                    className="px-4 py-2 text-sm rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
-                    style={{
-                        background: 'var(--surface-2)',
-                        borderColor: 'var(--border)',
-                        color: 'var(--text)'
-                    }}
+                    className="px-4 py-2 text-sm rounded-md border border-(--border) bg-(--surface-2) text-(--text) cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={onRetry}
                 >
                     Retry
@@ -52,8 +45,7 @@ export default function NoteList({ onRetry }: NoteListProps) {
     if (notes.length === 0) {
         return (
             <div
-                className="flex flex-col flex-1 items-center justify-center gap-2 p-10 text-center"
-                style={{ color: 'var(--text-muted)' }}
+                className="flex flex-col flex-1 items-center justify-center gap-2 p-10 text-center text-(--text-muted)"
                 role="status"
             >
                 <p className="text-base font-semibold m-0">No notes yet</p>
@@ -61,16 +53,14 @@ export default function NoteList({ onRetry }: NoteListProps) {
             </div>
         );
     }
-    
+
     return (
         <ul
-            className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 list-none m-0"
+            className="notes-list bg-(--bg) flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 list-none m-0"
             aria-label="Notes"
         >
             {notes.map((note) => (
-                <li key={note.id}>
-                    <NoteListItem key={note.id} note={note} />
-                </li>
+                <NoteListItem key={note.id} note={note} />
             ))}
         </ul>
     )
