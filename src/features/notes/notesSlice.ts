@@ -58,10 +58,10 @@ export const createNote = createAsyncThunk(
         dispatch(selectNote(tempId));
         try {
             const created = await notesApi.create(input);
-            // Preserve local content & tags — DummyJSON doesn't store them.
             const merged: Note = { ...optimistic, id: created.id, completed: created.completed };
             dispatch(noteReplaced({ tempId, note: merged }));
             dispatch(selectNote(created.id));
+            localStorage.setItem(`note-${created.id}`, JSON.stringify(merged));
             return merged;
         } catch (err) {
             dispatch(noteRemoved(tempId));
@@ -77,7 +77,7 @@ export const updateNote = createAsyncThunk(
         dispatch(notePatched({ id, input }));
         try {
             await notesApi.update(id, input);
-            // Do NOT replace with API response — content & tags are local-only.
+            localStorage.setItem(`note-${id}`, JSON.stringify(input));
             return { id };
         } catch (err) {
             if (previous) dispatch(noteReplaced({ tempId: id, note: previous }));
@@ -96,6 +96,7 @@ export const deleteNote = createAsyncThunk(
         if (state.selectedId === id) dispatch(selectNote(null));
         try {
             await notesApi.remove(id);
+            localStorage.removeItem(`note-${id}`);
             return id;
         } catch (err) {
             if (previous) dispatch(noteRestored({ note: previous, index: previousIndex }));
