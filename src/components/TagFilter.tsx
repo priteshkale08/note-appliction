@@ -4,13 +4,11 @@ import { HARDCODED_TAGS } from '../features/notes/notesSlice';
 
 export function TagFilter() {
     const dispatch = useAppDispatch();
-    const activeTag = useAppSelector((s) => s.filters.tag);
+    const activeTag = useAppSelector((state) => state.filters.tag);
 
     return (
         <nav className="flex flex-col gap-0.5" aria-label="Filter by tag">
-            <h2
-                className="text-[11px] font-semibold uppercase tracking-widest px-2 mb-2 text-(--text-muted)"
-            >
+            <h2 className="text-[11px] font-semibold uppercase px-2 mb-2 text-(--text-muted)">
                 Tags
             </h2>
             <ul className="list-none m-0 p-0 flex flex-col gap-0.5">

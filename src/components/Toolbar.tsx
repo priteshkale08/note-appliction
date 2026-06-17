@@ -15,8 +15,10 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 export function Toolbar({ searchRef }: ToolbarProps) {
     const dispatch = useAppDispatch();
-    const search = useAppSelector((s) => s.filters.search);
-    const sort = useAppSelector((s) => s.filters.sort);
+    const search = useAppSelector((state) => state.filters.search);
+    const sort = useAppSelector((state) => state.filters.sort);
+
+    
 
     return (
         <div className="flex gap-2 items-center px-3 py-2.5 shrink-0 flex-wrap border-b border-(--border)">
@@ -38,9 +40,9 @@ export function Toolbar({ searchRef }: ToolbarProps) {
                 className="px-2 py-1.5 text-sm rounded-md border border-(--border) bg-(--surface-2) text-(--text) outline-none cursor-pointer shrink-0"
                 onChange={(e) => dispatch(setSort(e.target.value as SortKey))}
             >
-                {SORT_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                        {opt.label}
+                {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                        {option.label}
                     </option>
                 ))}
             </select>

@@ -87,7 +87,7 @@ export const createNote = createAsyncThunk(
     async (input: CreateNoteInput, { dispatch, getState, rejectWithValue }) => {
         const now = new Date().toISOString();
         const tempId = `temp-${nanoid()}`;
-        const localId = nanoid();
+        const localId = String(Date.now());
         const optimistic: Note = { id: tempId, ...input, createdAt: now, updatedAt: now };
         dispatch(noteInserted(optimistic));
         dispatch(selectNote(tempId));
@@ -134,10 +134,6 @@ export const updateNote = createAsyncThunk(
     }
 );
 
-/**
- * deleteNote removes the note optimistically, updates localStorage, and calls
- * the API. On API failure the note is restored in both Redux state and localStorage.
- */
 export const deleteNote = createAsyncThunk(
     'notes/delete',
     async (id: string, { getState, dispatch, rejectWithValue }) => {
@@ -153,6 +149,9 @@ export const deleteNote = createAsyncThunk(
             await notesApi.remove(id);
             return id;
         } catch (err) {
+            if (err instanceof ApiError && err.status === 404) {
+                return id;
+            }
             if (previous) {
                 dispatch(noteRestored({ note: previous, index: previousIndex }));
                 

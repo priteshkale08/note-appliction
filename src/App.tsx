@@ -14,7 +14,7 @@ import {
     selectNotesError,
     selectSaving,
 } from './features/notes/notesSlice';
-import { Moon, Plus, Sun } from 'lucide-react';
+import { Moon, NotebookPen, Plus, Sun } from 'lucide-react';
 
 export default function App() {
     const dispatch = useAppDispatch();
@@ -73,7 +73,9 @@ export default function App() {
     return (
         <div className={`flex flex-col h-screen bg-(--bg) text-(--text)${isDark ? ' dark' : ''}`}>
             <header className="flex items-center justify-between gap-3 px-4 py-3 shrink-0 bg-(--surface) border-b border-(--border)">
-                <h1 className="text-xl font-bold text-(--text)">Note Application</h1>
+                <h1 className="text-xl font-bold text-(--text) flex items-center gap-2">
+                    <NotebookPen size={24} color="#4f39f6" /> Note Application
+                </h1>
 
                 {!online && (
                     <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
