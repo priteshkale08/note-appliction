@@ -34,6 +34,29 @@ const initialState: NoteState = {
     saving: false
 }
 
+// local storage 
+const LS_NOTES_KEY = 'app-notes-list';
+
+function loadNotesFromStorage(): Note[] | null {
+    try {
+        const raw = localStorage.getItem(LS_NOTES_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed as Note[];
+        return null;
+    } catch {
+        return null;
+    }
+}
+
+function saveNotesToStorage(notes: Note[]): void {
+    try {
+        localStorage.setItem(LS_NOTES_KEY, JSON.stringify(notes));
+    } catch {
+        console.error('Failed to save notes to localStorage');
+    }
+}
+
 function toMessage(err: unknown): string {
     if (err instanceof ApiError) return err.message;
     if (err instanceof Error) return err.message;
@@ -41,8 +64,19 @@ function toMessage(err: unknown): string {
 }
 
 export const fetchNotes = createAsyncThunk('notes/fetch', async (query: NotesQuery, { rejectWithValue }) => {
+    const cached = loadNotesFromStorage();
+    if (cached) {
+        return {
+            items: cached,
+            total: cached.length,
+            page: query.page ?? 1,
+            pageSize: query.pageSize ?? cached.length
+        };
+    }
     try {
-        return await notesApi.list(query);
+        const result = await notesApi.list(query);
+        saveNotesToStorage(result.items);
+        return result;
     } catch (err) {
         return rejectWithValue(toMessage(err));
     }
@@ -50,21 +84,28 @@ export const fetchNotes = createAsyncThunk('notes/fetch', async (query: NotesQue
 
 export const createNote = createAsyncThunk(
     'notes/create',
-    async (input: CreateNoteInput, { dispatch, rejectWithValue }) => {
+    async (input: CreateNoteInput, { dispatch, getState, rejectWithValue }) => {
         const now = new Date().toISOString();
         const tempId = `temp-${nanoid()}`;
+        const localId = nanoid();
         const optimistic: Note = { id: tempId, ...input, createdAt: now, updatedAt: now };
         dispatch(noteInserted(optimistic));
         dispatch(selectNote(tempId));
         try {
-            const created = await notesApi.create(input);
-            const merged: Note = { ...optimistic, id: created.id, completed: created.completed };
+            await notesApi.create(input);
+            const merged: Note = { ...optimistic, id: localId };
             dispatch(noteReplaced({ tempId, note: merged }));
-            dispatch(selectNote(created.id));
-            localStorage.setItem(`note-${created.id}`, JSON.stringify(merged));
+            dispatch(selectNote(localId));
+            
+            const updatedItems = (getState() as RootState).notes.items.map((n) =>
+                n.id === tempId ? merged : n
+            );
+            saveNotesToStorage(updatedItems);
             return merged;
         } catch (err) {
             dispatch(noteRemoved(tempId));
+            const revertedItems = (getState() as RootState).notes.items.filter((n) => n.id !== tempId);
+            saveNotesToStorage(revertedItems);
             return rejectWithValue(toMessage(err));
         }
     }
@@ -75,17 +116,28 @@ export const updateNote = createAsyncThunk(
     async ({ id, input }: { id: string; input: UpdateNoteInput }, { getState, dispatch, rejectWithValue }) => {
         const previous = (getState() as RootState).notes.items.find((n) => n.id === id);
         dispatch(notePatched({ id, input }));
+        
+        const patchedItems = (getState() as RootState).notes.items;
+        saveNotesToStorage(patchedItems);
         try {
             await notesApi.update(id, input);
-            localStorage.setItem(`note-${id}`, JSON.stringify(input));
             return { id };
         } catch (err) {
-            if (previous) dispatch(noteReplaced({ tempId: id, note: previous }));
+            if (previous) {
+                dispatch(noteReplaced({ tempId: id, note: previous }));
+                // Revert localStorage to match rolled-back state
+                const revertedItems = (getState() as RootState).notes.items;
+                saveNotesToStorage(revertedItems);
+            }
             return rejectWithValue(toMessage(err));
         }
     }
 );
 
+/**
+ * deleteNote removes the note optimistically, updates localStorage, and calls
+ * the API. On API failure the note is restored in both Redux state and localStorage.
+ */
 export const deleteNote = createAsyncThunk(
     'notes/delete',
     async (id: string, { getState, dispatch, rejectWithValue }) => {
@@ -94,12 +146,19 @@ export const deleteNote = createAsyncThunk(
         const previousIndex = state.items.findIndex((n) => n.id === id);
         dispatch(noteRemoved(id));
         if (state.selectedId === id) dispatch(selectNote(null));
+        
+        const updatedItems = (getState() as RootState).notes.items;
+        saveNotesToStorage(updatedItems);
         try {
             await notesApi.remove(id);
-            localStorage.removeItem(`note-${id}`);
             return id;
         } catch (err) {
-            if (previous) dispatch(noteRestored({ note: previous, index: previousIndex }));
+            if (previous) {
+                dispatch(noteRestored({ note: previous, index: previousIndex }));
+                
+                const restoredItems = (getState() as RootState).notes.items;
+                saveNotesToStorage(restoredItems);
+            }
             return rejectWithValue(toMessage(err));
         }
     }
@@ -200,9 +259,8 @@ export const selectFilteredNotes = (state: RootState): Note[] => {
         if (sort === 'title') return a.title.localeCompare(b.title);
         if (sort === 'createdAt') return b.createdAt.localeCompare(a.createdAt);
         if (sort === 'updatedAt') return b.updatedAt.localeCompare(a.updatedAt);
-        if (sort === 'completed') {
-            return (b.completed ? 1 : 0) - (a.completed ? 1 : 0);
-        }
+        if (sort === 'completed') return (b.completed ? 1 : 0) - (a.completed ? 1 : 0);
+        return 0;
     });
 };
 
