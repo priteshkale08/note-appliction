@@ -1,6 +1,5 @@
-import { createAsyncThunk, createSlice, nanoid, type PayloadAction } from '@reduxjs/toolkit';
-import type { CreateNoteInput, Note, NotesQuery, UpdateNoteInput } from '../../types';
-import { ApiError, notesApi } from '../../api/notesApi';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { Note, UpdateNoteInput } from '../../types';
 import type { RootState } from '../../app/store';
 
 export const HARDCODED_TAGS = [
@@ -31,142 +30,36 @@ const initialState: NoteState = {
     status: 'idle',
     error: null,
     selectedId: null,
-    saving: false
-}
-
-// local storage 
-const LS_NOTES_KEY = 'app-notes-list';
-
-function loadNotesFromStorage(): Note[] | null {
-    try {
-        const raw = localStorage.getItem(LS_NOTES_KEY);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw) as unknown;
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed as Note[];
-        return null;
-    } catch {
-        return null;
-    }
-}
-
-function saveNotesToStorage(notes: Note[]): void {
-    try {
-        localStorage.setItem(LS_NOTES_KEY, JSON.stringify(notes));
-    } catch {
-        console.error('Failed to save notes to localStorage');
-    }
-}
-
-function toMessage(err: unknown): string {
-    if (err instanceof ApiError) return err.message;
-    if (err instanceof Error) return err.message;
-    return 'Something went wrong.';
-}
-
-export const fetchNotes = createAsyncThunk('notes/fetch', async (query: NotesQuery, { rejectWithValue }) => {
-    const cached = loadNotesFromStorage();
-    if (cached) {
-        return {
-            items: cached,
-            total: cached.length,
-            page: query.page ?? 1,
-            pageSize: query.pageSize ?? cached.length
-        };
-    }
-    try {
-        const result = await notesApi.list(query);
-        saveNotesToStorage(result.items);
-        return result;
-    } catch (err) {
-        return rejectWithValue(toMessage(err));
-    }
-});
-
-export const createNote = createAsyncThunk(
-    'notes/create',
-    async (input: CreateNoteInput, { dispatch, getState, rejectWithValue }) => {
-        const now = new Date().toISOString();
-        const tempId = `temp-${nanoid()}`;
-        const localId = String(Date.now());
-        const optimistic: Note = { id: tempId, ...input, createdAt: now, updatedAt: now };
-        dispatch(noteInserted(optimistic));
-        dispatch(selectNote(tempId));
-        try {
-            await notesApi.create(input);
-            const merged: Note = { ...optimistic, id: localId };
-            dispatch(noteReplaced({ tempId, note: merged }));
-            dispatch(selectNote(localId));
-            
-            const updatedItems = (getState() as RootState).notes.items.map((n) =>
-                n.id === tempId ? merged : n
-            );
-            saveNotesToStorage(updatedItems);
-            return merged;
-        } catch (err) {
-            dispatch(noteRemoved(tempId));
-            const revertedItems = (getState() as RootState).notes.items.filter((n) => n.id !== tempId);
-            saveNotesToStorage(revertedItems);
-            return rejectWithValue(toMessage(err));
-        }
-    }
-);
-
-export const updateNote = createAsyncThunk(
-    'notes/update',
-    async ({ id, input }: { id: string; input: UpdateNoteInput }, { getState, dispatch, rejectWithValue }) => {
-        const previous = (getState() as RootState).notes.items.find((n) => n.id === id);
-        dispatch(notePatched({ id, input }));
-        
-        const patchedItems = (getState() as RootState).notes.items;
-        saveNotesToStorage(patchedItems);
-        try {
-            await notesApi.update(id, input);
-            return { id };
-        } catch (err) {
-            if (previous) {
-                dispatch(noteReplaced({ tempId: id, note: previous }));
-                // Revert localStorage to match rolled-back state
-                const revertedItems = (getState() as RootState).notes.items;
-                saveNotesToStorage(revertedItems);
-            }
-            return rejectWithValue(toMessage(err));
-        }
-    }
-);
-
-export const deleteNote = createAsyncThunk(
-    'notes/delete',
-    async (id: string, { getState, dispatch, rejectWithValue }) => {
-        const state = (getState() as RootState).notes;
-        const previous = state.items.find((n) => n.id === id);
-        const previousIndex = state.items.findIndex((n) => n.id === id);
-        dispatch(noteRemoved(id));
-        if (state.selectedId === id) dispatch(selectNote(null));
-        
-        const updatedItems = (getState() as RootState).notes.items;
-        saveNotesToStorage(updatedItems);
-        try {
-            await notesApi.remove(id);
-            return id;
-        } catch (err) {
-            if (err instanceof ApiError && err.status === 404) {
-                return id;
-            }
-            if (previous) {
-                dispatch(noteRestored({ note: previous, index: previousIndex }));
-                
-                const restoredItems = (getState() as RootState).notes.items;
-                saveNotesToStorage(restoredItems);
-            }
-            return rejectWithValue(toMessage(err));
-        }
-    }
-);
+    saving: false,
+};
 
 const notesSlice = createSlice({
     name: 'notes',
     initialState,
     reducers: {
+        fetchStarted(state) {
+            state.status = 'loading';
+            state.error = null;
+        },
+        fetchSucceeded(state, action: PayloadAction<{ items: Note[]; total: number }>) {
+            state.status = 'succeeded';
+            state.items = action.payload.items;
+            state.total = action.payload.total;
+        },
+        fetchFailed(state, action: PayloadAction<string>) {
+            state.status = 'failed';
+            state.error = action.payload;
+        },
+        saveStarted(state) {
+            state.saving = true;
+        },
+        saveEnded(state) {
+            state.saving = false;
+        },
+        saveError(state, action: PayloadAction<string>) {
+            state.saving = false;
+            state.error = action.payload;
+        },
         selectNote(state, action: PayloadAction<string | null>) {
             state.selectedId = action.payload;
         },
@@ -196,47 +89,8 @@ const notesSlice = createSlice({
         },
         clearError(state) {
             state.error = null;
-        }
+        },
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase(fetchNotes.pending, (state) => {
-                state.status = 'loading';
-                state.error = null;
-            })
-            .addCase(fetchNotes.fulfilled, (state, action) => {
-                state.status = 'succeeded';
-                state.items = action.payload.items;
-                state.total = action.payload.total;
-            })
-            .addCase(fetchNotes.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = (action.payload as string) ?? 'Failed to load notes.';
-            })
-            .addCase(createNote.pending, (state) => {
-                state.saving = true;
-            })
-            .addCase(createNote.fulfilled, (state) => {
-                state.saving = false;
-            })
-            .addCase(createNote.rejected, (state, action) => {
-                state.saving = false;
-                state.error = (action.payload as string) ?? 'Failed to create note.';
-            })
-            .addCase(updateNote.pending, (state) => {
-                state.saving = true;
-            })
-            .addCase(updateNote.fulfilled, (state) => {
-                state.saving = false;
-            })
-            .addCase(updateNote.rejected, (state, action) => {
-                state.saving = false;
-                state.error = (action.payload as string) ?? 'Failed to save note.';
-            })
-            .addCase(deleteNote.rejected, (state, action) => {
-                state.error = (action.payload as string) ?? 'Failed to delete note.';
-            });
-    }
 });
 
 export const selectFilteredNotes = (state: RootState): Note[] => {
@@ -244,14 +98,14 @@ export const selectFilteredNotes = (state: RootState): Note[] => {
     let notes = state.notes.items;
 
     if (search) {
-        const searchQuery = search.toLowerCase();
+        const q = search.toLowerCase();
         notes = notes.filter(
-            (item) => item.title.toLowerCase().includes(searchQuery) || item.content.toLowerCase().includes(searchQuery)
+            (n) => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)
         );
     }
 
     if (tag) {
-        notes = notes.filter((item) => item.tags.includes(tag));
+        notes = notes.filter((n) => n.tags.includes(tag));
     }
 
     return [...notes].sort((a, b) => {
@@ -264,13 +118,19 @@ export const selectFilteredNotes = (state: RootState): Note[] => {
 };
 
 export const {
+    fetchStarted,
+    fetchSucceeded,
+    fetchFailed,
+    saveStarted,
+    saveEnded,
+    saveError,
     selectNote,
     noteInserted,
     noteReplaced,
     notePatched,
     noteRemoved,
     noteRestored,
-    clearError
+    clearError,
 } = notesSlice.actions;
 
 export const selectNotes = (state: RootState) => state.notes.items;
@@ -278,6 +138,7 @@ export const selectNotesStatus = (state: RootState) => state.notes.status;
 export const selectNotesError = (state: RootState) => state.notes.error;
 export const selectSelectedId = (state: RootState) => state.notes.selectedId;
 export const selectSaving = (state: RootState) => state.notes.saving;
-export const selectSelectedNote = (state: RootState) => state.notes.items.find((n) => n.id === state.notes.selectedId) ?? null;
+export const selectSelectedNote = (state: RootState) =>
+    state.notes.items.find((n) => n.id === state.notes.selectedId) ?? null;
 
 export default notesSlice.reducer;

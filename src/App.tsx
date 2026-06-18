@@ -7,13 +7,12 @@ import { Toolbar } from './components/Toolbar';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import {
     clearError,
-    createNote,
-    fetchNotes,
     selectNote,
     selectSelectedId,
     selectNotesError,
     selectSaving,
 } from './features/notes/notesSlice';
+import { createNoteRequest, fetchNotesRequest } from './features/notes/notesSaga';
 import { Moon, NotebookPen, Plus, Sun } from 'lucide-react';
 
 export default function App() {
@@ -39,7 +38,7 @@ export default function App() {
     }, []);
 
     const loadNotes = useCallback(() => {
-        dispatch(fetchNotes({}));
+        dispatch(fetchNotesRequest({}));
     }, [dispatch]);
 
     useEffect(() => {
@@ -61,7 +60,7 @@ export default function App() {
                 searchRef.current?.focus();
             } else if ((e.key === 'n' || e.key === 'N') && !typing) {
                 e.preventDefault();
-                dispatch(createNote({ title: 'Untitled note', content: '', completed: false, tags: [] }));
+                dispatch(createNoteRequest({ title: 'Untitled note', content: '', completed: false, tags: [] }));
             }
         };
         window.addEventListener('keydown', onKey);
@@ -90,7 +89,7 @@ export default function App() {
                         disabled={saving}
                         aria-label="New note"
                         onClick={() =>
-                            dispatch(createNote({ title: 'Untitled note', content: '', completed: false, tags: [] }))
+                            dispatch(createNoteRequest({ title: 'Untitled note', content: '', completed: false, tags: [] }))
                         }
                     >
                         <Plus size={15} /> New note

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { deleteNote, selectSaving, selectSelectedNote, updateNote } from '../features/notes/notesSlice';
+import { selectSaving, selectSelectedNote } from '../features/notes/notesSlice';
+import { deleteNoteRequest, updateNoteRequest } from '../features/notes/notesSaga';
 import { useDebounce } from '../hooks/useDebounce';
 import { renderMarkdown } from '../utils/markdown';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -48,7 +49,7 @@ export function NoteEditor({ onBack }: NoteEditorProps) {
         const sig = signature(debouncedForm);
         if (sig === lastSavedRef.current) return;
         lastSavedRef.current = sig;
-        dispatch(updateNote({ id: note.id, input: debouncedForm }));
+        dispatch(updateNoteRequest({ id: note.id, input: debouncedForm }));
     }, [debouncedForm]);
 
     const previewHtml = useMemo(() => renderMarkdown(form.content), [form.content]);
@@ -161,7 +162,7 @@ export function NoteEditor({ onBack }: NoteEditorProps) {
                 onCancel={() => setConfirmOpen(false)}
                 onConfirm={() => {
                     setConfirmOpen(false);
-                    dispatch(deleteNote(note.id));
+                    dispatch(deleteNoteRequest(note.id));
                 }}
             />
         </section>
