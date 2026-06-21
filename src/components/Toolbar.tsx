@@ -17,9 +17,7 @@ export function Toolbar({ searchRef }: ToolbarProps) {
     const dispatch = useAppDispatch();
     const search = useAppSelector((state) => state.filters.search);
     const sort = useAppSelector((state) => state.filters.sort);
-
     
-
     return (
         <div className="flex gap-2 items-center px-3 py-2.5 shrink-0 flex-wrap border-b border-(--border)">
             <div className="flex-1 min-w-[120px]">
